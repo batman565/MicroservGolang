@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"log"
 	jwts "myapp/api_gateway/internal/jwt"
 	"net/http"
-
 	"net/http/httputil"
 	"net/url"
 	"os"
-
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -28,10 +26,13 @@ func main() {
 	// }
 	// orderProxy := httputil.NewSingleHostReverseProxy(orderUrl)
 	mux := http.NewServeMux()
+	//Users
 	mux.Handle("/v1/auth/token", createProxyHandler(userProxy))
 	mux.Handle("/v1/auth/register", createProxyHandler(userProxy))
 	mux.Handle("/v1/users/get", jwts.AuthMiddleware(createProxyHandler(userProxy)))
 	mux.Handle("/v1/users/getall", jwts.RequireSupervisorOrManager(createProxyHandler(userProxy)))
+	mux.Handle("/v1/users/update", jwts.AuthMiddleware(createProxyHandler(userProxy)))
+	//Orders
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
