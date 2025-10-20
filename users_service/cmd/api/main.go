@@ -28,5 +28,6 @@ func main() {
 	mux.HandleFunc("/v1/auth/token", usershand.HandlerAuth)
 	mux.HandleFunc("/v1/auth/register", usershand.HandlerRegister)
 	mux.HandleFunc("/v1/users/get", usershand.HandlerGetUser)
+	mux.HandleFunc("/v1/users/getall", usershand.HandlerGetAllUser)
 	log.Fatal(http.ListenAndServe(":8001", mux))
 }

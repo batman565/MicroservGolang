@@ -31,6 +31,7 @@ func main() {
 	mux.Handle("/v1/auth/token", createProxyHandler(userProxy))
 	mux.Handle("/v1/auth/register", createProxyHandler(userProxy))
 	mux.Handle("/v1/users/get", jwts.AuthMiddleware(createProxyHandler(userProxy)))
+	mux.Handle("/v1/users/getall", jwts.RequireSupervisorOrManager(createProxyHandler(userProxy)))
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
