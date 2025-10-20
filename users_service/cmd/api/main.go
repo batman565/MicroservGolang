@@ -11,10 +11,10 @@ import (
 
 func main() {
 	db, err := sql.Open("postgres", "host=localhost port=5432 user=postgres dbname=microuser sslmode=disable")
-	err = godotenv.Load("users_service/.env")
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = godotenv.Load("users_service/.env")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,6 +25,6 @@ func main() {
 	usershand := handlers.NewUsersHandler(db)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auth/token", usershand.HandlerAuth)
-	// mux.HandleFunc("/auth/register", usershand.HandlerRegister)
+	mux.HandleFunc("/auth/register", usershand.HandlerRegister)
 	log.Fatal(http.ListenAndServe(":8001", mux))
 }
