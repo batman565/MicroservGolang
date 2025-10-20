@@ -2,11 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	"log"
 	"myapp/users_service/internal/handlers"
 	"net/http"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -24,7 +25,8 @@ func main() {
 	}
 	usershand := handlers.NewUsersHandler(db)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/auth/token", usershand.HandlerAuth)
-	mux.HandleFunc("/auth/register", usershand.HandlerRegister)
+	mux.HandleFunc("/v1/auth/token", usershand.HandlerAuth)
+	mux.HandleFunc("/v1/auth/register", usershand.HandlerRegister)
+	mux.HandleFunc("/v1/users/get", usershand.HandlerGetUser)
 	log.Fatal(http.ListenAndServe(":8001", mux))
 }

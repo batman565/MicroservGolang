@@ -7,6 +7,7 @@ import (
 	"myapp/users_service/internal/modules"
 	"net/http"
 	"slices"
+	"strconv"
 )
 
 type usersHandler struct {
@@ -127,4 +128,35 @@ func (g *usersHandler) HandlerRegister(w http.ResponseWriter, r *http.Request) {
 	UserResponse.Token = "Bearer " + token
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&UserResponse)
+}
+
+func (g *usersHandler) HandlerGetUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if r.Header.Values("X-User-Id") == nil {
+		http.Error(w, "Error", http.StatusInternalServerError)
+		return
+	}
+	id, err := strconv.Atoi(r.Header.Values("X-User-Id")[0])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var User modules.User
+	err = g.db.QueryRow("select id, email, name, role, created_at, updated_at from users where id = $1", id).Scan(
+		&User.Id,
+		&User.Email,
+		&User.Name,
+		&User.Role,
+		&User.CreatedAt,
+		&User.UpdatedAt,
+	)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&User)
 }

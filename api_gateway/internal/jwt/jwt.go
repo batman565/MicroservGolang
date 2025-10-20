@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -24,26 +23,6 @@ type Claims struct {
 	Role  string `json:"roles"`
 	Email string `json:"email"`
 	jwt.StandardClaims
-}
-
-func GenerateToken(id int, roles string, email string) (string, error) {
-	if roles == "" {
-		return "", fmt.Errorf("roles not implemented")
-	}
-	if id <= 0 {
-		return "", fmt.Errorf("id must be greater more than 0")
-	}
-	Claims := &Claims{
-		ID:    id,
-		Role:  roles,
-		Email: email,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims)
-	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 }
 
 func ValidateToken(tokenString string) (*Claims, error) {

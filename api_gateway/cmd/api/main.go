@@ -28,9 +28,9 @@ func main() {
 	// }
 	// orderProxy := httputil.NewSingleHostReverseProxy(orderUrl)
 	mux := http.NewServeMux()
-	mux.Handle("/auth/token", createProxyHandler(userProxy))
-	mux.Handle("/auth/register", createProxyHandler(userProxy))
-
+	mux.Handle("/v1/auth/token", createProxyHandler(userProxy))
+	mux.Handle("/v1/auth/register", createProxyHandler(userProxy))
+	mux.Handle("/v1/users/get", jwts.AuthMiddleware(createProxyHandler(userProxy)))
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
