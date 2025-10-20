@@ -317,3 +317,113 @@ func (g *usersHandler) HandlerUpdateUser(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
+
+func (g *usersHandler) HandlerUpdateUserAdmin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, `{"error": "Method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Body == nil {
+		http.Error(w, `{"error": "Request body is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	type userreq struct {
+		Id       int    `json:"id"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Role     string `json:"role"`
+		Password string `json:"password"`
+	}
+
+	var user userreq
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, `{"error": "Invalid JSON: `+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+
+	if user.Id == 0 || (user.Name == "" && user.Email == "" && user.Role == "" && user.Password == "") {
+		http.Error(w, `{"error": "At least one field (name, email, role, or password) and id must be provided"}`, http.StatusBadRequest)
+		return
+	}
+
+	var args []interface{}
+	var setClauses []string
+	paramCount := 1
+
+	if user.Name != "" {
+		setClauses = append(setClauses, fmt.Sprintf("name = $%d", paramCount))
+		args = append(args, user.Name)
+		paramCount++
+	}
+
+	if user.Email != "" {
+		setClauses = append(setClauses, fmt.Sprintf("email = $%d", paramCount))
+		args = append(args, user.Email)
+		paramCount++
+	}
+
+	if user.Role != "" {
+		validRoles := []string{"Исполнитель", "Руководитель", "Инженер"}
+		if !slices.Contains(validRoles, user.Role) {
+			http.Error(w, `{"error": "Invalid role. Must be one of: Исполнитель, Руководитель, Инженер"}`, http.StatusBadRequest)
+			return
+		}
+		setClauses = append(setClauses, fmt.Sprintf("role = $%d", paramCount))
+		args = append(args, user.Role)
+		paramCount++
+	}
+
+	if user.Password != "" {
+		hashedPassword, err := jwts.HashedPassword(user.Password)
+		if err != nil {
+			http.Error(w, `{"error": "Failed to hash password: `+err.Error()+`"}`, http.StatusInternalServerError)
+			return
+		}
+		setClauses = append(setClauses, fmt.Sprintf("password = $%d", paramCount))
+		args = append(args, hashedPassword)
+		paramCount++
+	}
+
+	setClauses = append(setClauses, fmt.Sprintf("updated_at = $%d", paramCount))
+	args = append(args, time.Now())
+	paramCount++
+
+	args = append(args, user.Id)
+
+	query := "UPDATE users SET " + strings.Join(setClauses, ", ") +
+		fmt.Sprintf(" WHERE id = $%d", paramCount)
+
+	result, err := g.db.Exec(query, args...)
+	if err != nil {
+		http.Error(w, `{"error": "Database error: `+err.Error()+`"}`, http.StatusInternalServerError)
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, `{"error": "Failed to check affected rows: `+err.Error()+`"}`, http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0 {
+		http.Error(w, `{"error": "User not found"}`, http.StatusNotFound)
+		return
+	}
+
+	response := map[string]any{
+		"message": "User updated successfully",
+		"user_id": user.Id,
+		"updated_fields": map[string]any{
+			"name":     user.Name != "",
+			"email":    user.Email != "",
+			"role":     user.Role != "",
+			"password": user.Password != "",
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}

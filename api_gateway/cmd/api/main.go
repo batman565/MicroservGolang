@@ -32,6 +32,7 @@ func main() {
 	mux.Handle("/v1/users/get", jwts.AuthMiddleware(createProxyHandler(userProxy)))
 	mux.Handle("/v1/users/getall", jwts.RequireSupervisorOrManager(createProxyHandler(userProxy)))
 	mux.Handle("/v1/users/update", jwts.AuthMiddleware(createProxyHandler(userProxy)))
+	mux.Handle("/v1/users/update/admin", jwts.RequireSupervisorOrManager(createProxyHandler(userProxy)))
 	//Orders
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

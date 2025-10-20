@@ -30,5 +30,6 @@ func main() {
 	mux.HandleFunc("/v1/users/get", usershand.HandlerGetUser)
 	mux.HandleFunc("/v1/users/getall", usershand.HandlerGetAllUser)
 	mux.HandleFunc("/v1/users/update", usershand.HandlerUpdateUser)
+	mux.HandleFunc("/v1/users/update/admin", usershand.HandlerUpdateUserAdmin)
 	log.Fatal(http.ListenAndServe(":8001", mux))
 }
