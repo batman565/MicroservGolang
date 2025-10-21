@@ -20,11 +20,11 @@ func main() {
 	}
 	userProxy := httputil.NewSingleHostReverseProxy(userUrl)
 
-	// orderUrl, err := url.Parse(os.Getenv("ORDER_SERVICE"))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// orderProxy := httputil.NewSingleHostReverseProxy(orderUrl)
+	orderUrl, err := url.Parse(os.Getenv("ORDER_SERVICE"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	orderProxy := httputil.NewSingleHostReverseProxy(orderUrl)
 	mux := http.NewServeMux()
 	//Users
 	mux.Handle("/v1/auth/token", createProxyHandler(userProxy))
@@ -34,6 +34,8 @@ func main() {
 	mux.Handle("/v1/users/update", jwts.AuthMiddleware(createProxyHandler(userProxy)))
 	mux.Handle("/v1/users/update/admin", jwts.RequireSupervisorOrManager(createProxyHandler(userProxy)))
 	//Orders
+	mux.Handle("/v1/orders/getall", jwts.AuthMiddleware(createProxyHandler(orderProxy)))
+
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
