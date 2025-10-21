@@ -20,5 +20,6 @@ func main() {
 	orderhandler := handlers.NewOrderHandler(db)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/orders/getall", orderhandler.GetOrders)
+	mux.HandleFunc("/v1/orders/create", orderhandler.CreateOrder)
 	log.Fatal(http.ListenAndServe(":8002", mux))
 }
