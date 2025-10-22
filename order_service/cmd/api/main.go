@@ -22,5 +22,6 @@ func main() {
 	mux.HandleFunc("/v1/orders/getall", orderhandler.GetOrders)
 	mux.HandleFunc("/v1/orders/create", orderhandler.CreateOrder)
 	mux.HandleFunc("/v1/orders/get", orderhandler.GetOrder)
+	mux.HandleFunc("/v1/orders/update", orderhandler.UpdateOrder)
 	log.Fatal(http.ListenAndServe(":8002", mux))
 }

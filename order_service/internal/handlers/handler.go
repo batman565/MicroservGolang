@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"myapp/order_service/internal/modules"
 	"net/http"
 	"strconv"
@@ -169,6 +170,73 @@ func (o *orderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
 		&order.CreatedAt,
 		&order.UpdatedAt)
 	if err != nil {
+		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(order)
+}
+
+func (o *orderHandler) UpdateOrder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, `{"error": "invalid method"}`, http.StatusMethodNotAllowed)
+		return
+	}
+	if r.Body == nil {
+		http.Error(w, `{"error": "invalid body"}`, http.StatusBadRequest)
+		return
+	}
+	id := r.Header.Get("X-User-Id")
+	if id == "" {
+		http.Error(w, `{"error": "invalid id"}`, http.StatusInternalServerError)
+		return
+	}
+	var order modules.Order
+	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+	if order.Id <= 0 {
+		http.Error(w, `{"error": "invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	query := `UPDATE orders SET `
+	args := []interface{}{}
+	argscount := 1
+	if order.Order != "" {
+		query += `"order" = $` + fmt.Sprint(argscount) + `,`
+		args = append(args, order.Order)
+		argscount++
+	}
+	if order.Count != 0 {
+		query += `count = $` + fmt.Sprint(argscount) + `,`
+		args = append(args, order.Count)
+		argscount++
+	}
+	if order.Price != 0 {
+		query += `price = $` + fmt.Sprint(argscount) + `,`
+		args = append(args, order.Price)
+		argscount++
+	}
+	if order.Status != "" {
+		if order.Status == "Новая" || order.Status == "В работе" || order.Status == "Завершен" ||
+			order.Status == "Отменен" {
+			query += `status = $` + fmt.Sprint(argscount) + `,`
+			args = append(args, order.Status)
+			argscount++
+		} else {
+			http.Error(w, `{"error": "invalid status"}`, http.StatusBadRequest)
+			return
+		}
+	}
+	query += `updated_at = now() `
+	query += `where id = ` + fmt.Sprint(order.Id) + ` and user_id = ` + id + ` returning id, user_id,"order", count, price, status, created_at, updated_at`
+	err := o.db.QueryRow(query, args...).Scan(&order.Id, &order.UserID, &order.Order, &order.Count, &order.Price, &order.Status, &order.CreatedAt, &order.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, `{"error": "order not found"}`, http.StatusNotFound)
+			return
+		}
 		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
 	}
