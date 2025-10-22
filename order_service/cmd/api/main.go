@@ -21,5 +21,6 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/orders/getall", orderhandler.GetOrders)
 	mux.HandleFunc("/v1/orders/create", orderhandler.CreateOrder)
+	mux.HandleFunc("/v1/orders/get", orderhandler.GetOrder)
 	log.Fatal(http.ListenAndServe(":8002", mux))
 }

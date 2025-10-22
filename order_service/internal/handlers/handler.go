@@ -141,3 +141,37 @@ func (o *orderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(order)
 }
+
+func (o *orderHandler) GetOrder(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, `{"error": "invalid method"}`, http.StatusMethodNotAllowed)
+		return
+	}
+	query := r.URL.Query()
+	idStr := query.Get("id")
+	if idStr == "" {
+		http.Error(w, `{"error": "invalid id"}`, http.StatusBadRequest)
+		return
+	}
+	iduser := r.Header.Get("X-User-Id")
+	if iduser == "" {
+		http.Error(w, `{"error": "invalid userid"}`, http.StatusInternalServerError)
+		return
+	}
+	var order modules.Order
+	err := o.db.QueryRow(`SELECT * FROM orders WHERE id = $1 and user_id = $2`, idStr, iduser).Scan(
+		&order.Id,
+		&order.UserID,
+		&order.Order,
+		&order.Count,
+		&order.Price,
+		&order.Status,
+		&order.CreatedAt,
+		&order.UpdatedAt)
+	if err != nil {
+		http.Error(w, `{"error": "`+err.Error()+`"}`, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(order)
+}
