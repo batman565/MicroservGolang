@@ -1,5 +1,19 @@
 # Микросервисный API Gateway для сервисов пользователей и заказов с JWT аутентификацией.
 
+# Схема микросервисов
+
+<img src="src/SchemeMicroService.drawio.png"/>
+
+# Схема база данных Users
+
+<img src="src/ClassUserMicro.drawio.png"/>
+
+# Схема база данных Orders
+
+<img src="src/ClassOrderMicro.drawio.png"/>
+
+#
+
 Аутентификация
 API использует JWT Bearer token аутентификацию. Добавьте токен в заголовок Authorization:
 
