@@ -3,8 +3,10 @@
 Аутентификация
 API использует JWT Bearer token аутентификацию. Добавьте токен в заголовок Authorization:
 
-Authorization: Bearer <your_jwt_token> \n 
-Роли пользователей \n
+Authorization: Bearer <your_jwt_token>
+
+Роли пользователей
+
 Инженер - базовые права
 
 Руководитель и Менеджер - расширенные права (доступ к списку всех пользователей)
